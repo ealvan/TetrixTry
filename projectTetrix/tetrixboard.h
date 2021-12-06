@@ -83,16 +83,30 @@ private:
     int numPiecesDropped;
     int score;
     int level;
+    int coorde[20]={0};
+    void getCoordinate(int top_level );
     TetrixShape board[BoardWidth * BoardHeight];
     TetrixShape& shapeAt(int x, int y) {
         //te pone las coordenadas de board
         //en el tablero, la esquina superior izquierda
         return board[ x +(y * BoardWidth)];
+        //X: celda
+        //Y:alrtura donde esta esa celda
     }
+    TetrixShape bastard();
+    void getOfficeHeight();
+    TetrixShape getRamdomHardPiece(std::map<TetrixShape,int>& mapaHard);
+    void getMaxOnMap(std::map<TetrixShape,int>& mapaHard,int&max);
+    void deleteShapesOnMap(std::map<TetrixShape,int>& mapaHard,int&max);
+    bool isbastard = false;
 
     //es usado para el start(), para reanudar cuando esta pausado
     int timeoutTime() {
-        return 1000 / (1 + level);//masnivel, mas rapido
+        if(isbastard){
+            return 400 / (1 + level);//masnivel, mas rapido
+        }else{
+            return 1000 / (1 + level);
+        }
     }
     int squareWidth() {
         return contentsRect().width() / BoardWidth;
@@ -122,7 +136,7 @@ public:
 public slots:
     void start();//son los que se ejcutaran dado una SIGNAL
     void pause();
-
+    void updateMethod(const QString& method);
 signals://son las señales que puede enviar esta clase
     void scoreChanged(int score);//si cambia el score
     void levelChanged(int level);//si sube de nivel

@@ -53,7 +53,12 @@
 
 #include <QCoreApplication>
 #include <QGridLayout>
+
+// ---------------------------
 #include <QLabel>
+#include <QRadioButton>
+#include <QGroupBox>
+#include <QVBoxLayout>
 #include <QLCDNumber>
 #include <QPushButton>
 
@@ -63,6 +68,7 @@
 TetrixWindow::TetrixWindow(QWidget *parent)
     : QWidget(parent), board(new TetrixBoard)
 {
+    setStyleSheet("background-color:black;");
 //! [0]
 //  NEXT PIECE label
     nextPieceLabel = new QLabel;
@@ -73,22 +79,58 @@ TetrixWindow::TetrixWindow(QWidget *parent)
 //  SCORE en 5 digits initialization
     scoreLcd = new QLCDNumber(5);//digits number
     scoreLcd->setSegmentStyle(QLCDNumber::Filled);
+    scoreLcd->setStyleSheet(
+                "background-color:#064635;"
+                "color: #FFEBCC;"
+                "border-color: #5584AC;"
+                "border-style: dashed;"
+                " border-width: 5px;"
+                );
 //! [1]
 //  LEVEL of the game
     levelLcd = new QLCDNumber(2);//digits number
     levelLcd->setSegmentStyle(QLCDNumber::Flat);//style of numbers
-
+    levelLcd->setStyleSheet(
+                "background-color:#064635;"
+                "color: #FFEBCC;"
+                "border-color: #5584AC;"
+                "border-style: dashed;"
+                " border-width: 5px;"
+                );
 //  LINEAS borradas
     linesLcd = new QLCDNumber(5);//digits number
+    linesLcd->setStyleSheet(
+                "background-color:#064635;"
+                "color: #FFEBCC;"
+                "border-color: #5584AC;"
+                "border-style: dashed;"
+                " border-width: 5px;"
+                );
     linesLcd->setSegmentStyle(QLCDNumber::Outline);
 
 //! [2]
     startButton = new QPushButton(tr("&Start"));//tr -> means "tranlated"
+    startButton->setStyleSheet("color: white;"
+                               "background-color: #22577E;"
+                                "border-color: #F6F2D4;"
+                               "border-radius: 12px;"
+    );
+
     //by default no permit focus on pushButton element
     startButton->setFocusPolicy(Qt::NoFocus);
     quitButton = new QPushButton(tr("&Quit"));
+    quitButton->setStyleSheet("color: white;"
+                              "background-color: #22577E;"
+                               "border-color: #F6F2D4;"
+                              "border-radius: 12px;"
+    );
     quitButton->setFocusPolicy(Qt::NoFocus);
     pauseButton = new QPushButton(tr("&Pause"));
+    pauseButton->setStyleSheet("color: white;"
+                               "background-color: #22577E;"
+                                "border-color: #F6F2D4;"
+                               "border-radius: 12px;"
+    );
 //! [2] //! [3]
     pauseButton->setFocusPolicy(Qt::NoFocus);
 //! [3] //! [4]
@@ -110,6 +152,15 @@ TetrixWindow::TetrixWindow(QWidget *parent)
             board, // tetrixWindow -> board,  Receiver
             &TetrixBoard::pause); //SLOT TetrixBoard -> pause
 
+/*
+    connect(dificultBox,
+            &QGroupBox::clicked(false),
+            board,
+            setDificultLevel()
+            );
+
+
+*/
 #if __cplusplus >= 201402L
     connect(board, //sender
             &TetrixBoard::scoreChanged, //tetrix board
@@ -122,6 +173,14 @@ TetrixWindow::TetrixWindow(QWidget *parent)
             levelLcd, qOverload<int>(&QLCDNumber::display));
     connect(board, &TetrixBoard::linesRemovedChanged,
             linesLcd, qOverload<int>(&QLCDNumber::display));
+
+    connect(this,
+            SIGNAL(selectRadioButtonChanged(QString)),
+            board,
+            SLOT(updateMethod(QString))
+    );
+    //emit selectRadioButtonChanged("bastard");
+
 #else
     connect(board, &TetrixBoard::scoreChanged,
             scoreLcd, QOverload<int>::of(&QLCDNumber::display));
@@ -133,12 +192,15 @@ TetrixWindow::TetrixWindow(QWidget *parent)
 //! [5]
 
 //! [6]
+
     QGridLayout *layout = new QGridLayout;
-    layout->addWidget(createLabel(tr("NEXT")), 0, 0);
-    layout->addWidget(nextPieceLabel, 1, 0);
+    //layout->addWidget(createLabel(tr("NEXT")), 0, 0);
+    layout->addWidget(createBox(),1, 0);
+    //layout->addWidget(nextPieceLabel, 1, 0);
     layout->addWidget(createLabel(tr("LEVEL")), 2, 0);
     layout->addWidget(levelLcd, 3, 0);
     layout->addWidget(startButton, 4, 0);
+    //board->setFocus();
     layout->addWidget(board, 0, 1, 6, 1);
     layout->addWidget(createLabel(tr("SCORE")), 0, 2);
     layout->addWidget(scoreLcd, 1, 2);
@@ -146,10 +208,11 @@ TetrixWindow::TetrixWindow(QWidget *parent)
     layout->addWidget(linesLcd, 3, 2);
     layout->addWidget(quitButton, 4, 2);
     layout->addWidget(pauseButton, 5, 2);
+
     setLayout(layout);
 
     setWindowTitle(tr("Tetrix"));
-    resize(550, 370);
+    resize(900, 600);
 }
 //! [6]
 
@@ -160,5 +223,48 @@ QLabel* TetrixWindow::createLabel(const QString &text)
     label->setAlignment(Qt::AlignHCenter | Qt::AlignBottom);
     return label;
 }
+
 //! [7]
+QGroupBox* TetrixWindow::createBox(){
+    if(dificultBox != nullptr){
+        delete dificultBox;
+    }
+    dificultBox = new QGroupBox(tr("Nivel de dificultad"));
+    QVBoxLayout *vbox = new QVBoxLayout;
+    QRadioButton *radio1 = new QRadioButton(tr("Bastard"));
+    QRadioButton *radio2 = new QRadioButton(tr("Normal"));
+    QRadioButton *radio3 = new QRadioButton(tr("Nice"));
+    radio1->setStyleSheet(
+    //DD4A48
+                "color: #DD4A48;"
+                "font-family: 'Courier New';"
+                "font-size: 24px;"
+    );
+    radio2->setStyleSheet(
+                //DD4A48
+                            "color: #FFCA03;"
+                            "font-family: 'Courier New';"
+                            "font-size: 24px;"
+           );
+    radio3->setStyleSheet(
+                //DD4A48
+                            "color: #71DFE7;"
+                            "font-family: 'Courier New';"
+                            "font-size: 24px;"
+           );
+    vbox->addWidget(radio1);
+    vbox->addWidget(radio2);
+    vbox->addWidget(radio3);
+    //vbox->addStretch(1);
+    dificultBox->setStyleSheet(
+                "color: #396EB0;"
+                "font-family: 'Courier New';"
+                "font-size: 24px;"
+                );
+    dificultBox->setLayout(vbox);
+    dificultBox->setFocusPolicy(Qt::ClickFocus);
+
+    return dificultBox;
+}
+
 
