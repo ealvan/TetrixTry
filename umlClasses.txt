@@ -1,0 +1,29 @@
+QFrame
+QWidget
+
+Window
+	-score
+	-level
+	-linesRemoved
+	-startButton
+	-pauseButton
+	-quitButton
+
+Board
+	-bastard()
+	-getRandomPiece()
+	-clearBoard()
+	-shapeAt()
+
+Piece
+	-pieceShape
+	-coords
+	shape()
+	rotateLeft()
+	rotateRight()
+	setX()
+
+Board--*>QFrame
+Window--*>QWidget
+Board--<*>Window
+Piece--<*>Board
