@@ -52,11 +52,13 @@
 #define TETRIXWINDOW_H
 
 #include <QWidget>
-
 QT_BEGIN_NAMESPACE
+class QRadioButton;
+class QVBoxLayout;
 class QLCDNumber;
 class QLabel;
 class QPushButton;
+class QGroupBox;
 QT_END_NAMESPACE
 class TetrixBoard;
 
@@ -69,10 +71,15 @@ public:
     //constructor, no provee QWidget para ser especificado,
     //porque TetrsiWindow, sera el top level window!
     TetrixWindow(QWidget *parent = nullptr);
+signals:
+    //1,2,3
+    void selectRadioButtonChanged(QString);
+public slots:
+    void updateMethodBoard();
 
 private:
     QLabel *createLabel(const QString &text);
-
+    QGroupBox* createBox();
     TetrixBoard *board;//contiene la logica del juego, hereda de QFrame
     QLabel *nextPieceLabel; //siguiente pieza para el display
     QLCDNumber *scoreLcd; //es la puntucion o score para incializar
@@ -81,6 +88,12 @@ private:
     QPushButton *startButton;//boton de inicio
     QPushButton *quitButton;//boton de salir del juego
     QPushButton *pauseButton; // boton de pausar
+//    QVBoxLayout *dificulBox;//contiene radio buttons
+    QGroupBox *dificultBox = nullptr;
+//    Material.theme: Material.Dark
+    QRadioButton *radio1;
+    QRadioButton *radio2;
+    QRadioButton *radio3;
 };
 //! [0]
 

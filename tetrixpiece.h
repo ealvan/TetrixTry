@@ -70,21 +70,21 @@ public:
     void setRandomShape();
     void setShape(TetrixShape shape);
 
-    TetrixShape shape() const { return pieceShape; }
+    TetrixShape shape() const { return piezaForma; }
     int x(int index) const { return coords[index][0]; }
     int y(int index) const { return coords[index][1]; }
     int minX() const;
     int maxX() const;
     int minY() const;
     int maxY() const;
-    TetrixPiece rotatedLeft() const;
-    TetrixPiece rotatedRight() const;
+    TetrixPiece rotaL() const;
+    TetrixPiece rotaR() const;
 
 private:
     void setX(int index, int x) { coords[index][0] = x; }
-    void setY(int index, int y) { coords[index][1] = y; }
+    void setY(int index, int y) { coords[index][1] = y  ; }
 
-    TetrixShape pieceShape;//el tipo de pieza
+    TetrixShape piezaForma;//el tipo de pieza
     int coords[4][2];//guarda pieza
 };
 //! [0]

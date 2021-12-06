@@ -49,6 +49,9 @@
 ****************************************************************************/
 
 #include "tetrixboard.h"
+#include <stdio.h>      /* printf, NULL */
+#include <stdlib.h>     /* srand, rand */
+#include <time.h>
 
 #include <QKeyEvent>
 #include <QLabel>
@@ -59,12 +62,14 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <QRandomGenerator>
+
 //! [0]
 // El tetrixBoard es una subclase de QFrame,
 // y hay un QRect que cubre toda la zona,
 // antes de pintar esa zona
 TetrixBoard::TetrixBoard(QWidget *parent)
-    : QFrame(parent), isStarted(false), isPaused(false)
+    : QFrame(parent), comienzo(false), isPaused(false)
 {
     //cambia el style del playing area
     setFrameStyle(QFrame::Box | QFrame::Sunken);
@@ -104,6 +109,11 @@ QSize TetrixBoard::minimumSizeHint() const
                  BoardHeight * 5 + frameWidth() * 2);
 }
 
+void TetrixBoard::updateMethod(QString methodS){
+    method = methodS.toInt();
+
+}
+
 
 
 //! [3]
@@ -114,23 +124,46 @@ void TetrixBoard::newPiece(){
     //test.setShape(LineShape);
     //antes de esto, en el constructor se inicializa nextPiece, con setRandomPiece()
     //printState();
-    timer.stop();
-    TetrixShape hard = bastard();
-    std::cout << "hard: "<<hard <<"\n";
-    timer.start(timeoutTime(), this);
+    //int method=1;
+    TetrixPiece dump;
+    TetrixShape hard;
+    TetrixPiece pieza;
+    switch (method) {
+    case 1:{
+        timer.stop();
+        isbastard = true;//nivel dificil
+        hard = bastard();
+        std::cout << "hard: "<<hard <<"\n";
+        timer.start(timeoutTime(), this);
+    }
+    break;
+    case 2:{
+        dump.setRandomShape();
+        hard = dump.shape();
+    }
+    break;
+      case 3:{
+        timer.stop();
+        isbastard = false;
+        hard = bastard();
+        timer.start(timeoutTime(), this);
+    }
+    break;
+    }
+    pieza.setShape(hard);
 
+    //curPiece = nextPiece;//copia los valores del nextPiece al curPiece
+    curPiece = pieza;
 
-    curPiece = nextPiece;//copia los valores del nextPiece al curPiece
-    //curPiece = test;
-    nextPiece.setRandomShape();//ademas el nextPiece rellena su atributo coords[4][2]
-    showNextPiece();
+    //nextPiece.setRandomShape();//ademas el nextPiece rellena su atributo coords[4][2]
+    //showNextPiece();
     curX = BoardWidth / 2 + 1;
     curY = BoardHeight - 1 + curPiece.minY();
 
     if (!tryMove(curPiece, curX, curY)) {
         curPiece.setShape(NoShape);
         timer.stop();
-        isStarted = false;
+        comienzo = false;
     }
 //! [30] //! [31]
 }
@@ -172,8 +205,9 @@ void TetrixBoard::drawSquare(QPainter &painter, int x, int y, TetrixShape shape)
         0x000000, 0xCC6666, 0x66CC66, 0x6666CC,
         0xCCCC66, 0xCC66CC, 0x66CCCC, 0xDAAA00
     };
+    int random = QRandomGenerator::global()->bounded(7) + 1;
 
-    QColor color = colorTable[int(shape)];
+    QColor color = colorTable[random];
     painter.fillRect(x + 1,
                      y + 1,
                      squareWidth() -2,
@@ -181,11 +215,7 @@ void TetrixBoard::drawSquare(QPainter &painter, int x, int y, TetrixShape shape)
                      color);
 
     painter.setPen(color.black());
-    /*
-    .
-            .
-
-*/
+    /**/
     painter.drawLine(x, y + squareHeight() - 1, x, y);
 
     //painter.drawLine(x, y, x + squareWidth() - 1, y);
@@ -316,18 +346,19 @@ bool TetrixBoard::rowIsNoShape(int row){
 }
 //! [4]
 void TetrixBoard::start() {
+    //capturar el valor del metodo
 
     if (isPaused)
         return;
 
-    isStarted = true;
-    isWaitingAfterLine = false;
+    comienzo = true;
+    waitSgteLine = false;
     numLinesRemoved = 0;
     numPiecesDropped = 0;
     score = 0;
     level = 1;
     clearBoard();
-
+    //emit signal()
     emit linesRemovedChanged(numLinesRemoved);
     emit scoreChanged(score);
     emit levelChanged(level);
@@ -341,7 +372,7 @@ void TetrixBoard::start() {
 void TetrixBoard::pause()
 {
     //printState();
-    if (!isStarted)
+    if (!comienzo)
         return;
     isPaused = !isPaused;
     if (isPaused) {
@@ -407,7 +438,7 @@ drawText(const QRect &rectangle, int flags, const QString &text, QRect *bounding
 //! [13]
 void TetrixBoard::keyPressEvent(QKeyEvent *event)
 {
-    if (!isStarted || isPaused || curPiece.shape() == NoShape) {
+    if (!comienzo || isPaused || curPiece.shape() == NoShape) {
         QFrame::keyPressEvent(event);
         return;
     }
@@ -422,10 +453,10 @@ void TetrixBoard::keyPressEvent(QKeyEvent *event)
             tryMove(curPiece, curX + 1, curY);
             break;
         case Qt::Key_Down:
-            tryMove(curPiece.rotatedRight(), curX, curY);
+            tryMove(curPiece.rotaR(), curX, curY);
             break;
         case Qt::Key_Up:
-            tryMove(curPiece.rotatedLeft(), curX, curY);
+            tryMove(curPiece.rotaL(), curX, curY);
             break;
         case Qt::Key_Space:
             dropDown();
@@ -443,8 +474,8 @@ void TetrixBoard::keyPressEvent(QKeyEvent *event)
 void TetrixBoard::timerEvent(QTimerEvent *event)
 {
     if (event->timerId() == timer.timerId()) {
-        if (isWaitingAfterLine) {
-            isWaitingAfterLine = false;
+        if (waitSgteLine) {
+            waitSgteLine = false;
 
             newPiece();
             timer.start(timeoutTime(), this);
@@ -516,7 +547,7 @@ void TetrixBoard::pieceDropped(int dropHeight)
     emit scoreChanged(score);
     removeFullLines();
 
-    if (!isWaitingAfterLine)
+    if (!waitSgteLine)
     {
 
         //printState();
@@ -564,7 +595,7 @@ void TetrixBoard::removeFullLines()
         emit scoreChanged(score);
 
         timer.start(500, this);
-        isWaitingAfterLine = true;
+        waitSgteLine = true;
         curPiece.setShape(NoShape);
         update();
     }
@@ -576,7 +607,9 @@ void TetrixBoard::removeFullLines()
 //!
 //!
 TetrixShape TetrixBoard::bastard(){
+
     //aqui se usa la array coorde[]
+
     getOfficeHeight();
     std::map<TetrixShape,int> mapaHard ={
         {ZShape,0},//1
@@ -609,7 +642,7 @@ TetrixShape TetrixBoard::bastard(){
             for(int k= 0; k<4; ++k ){
                 arr[k] = tryMove(ficha,x,y);
                 //----------
-                ficha = ficha.rotatedLeft();
+                ficha = ficha.rotaL();
             }
             //---ANALISIS
             //si es >= a 3 los falsos
@@ -617,18 +650,23 @@ TetrixShape TetrixBoard::bastard(){
             //sino
             //false, true,true,true
             //
-            int countFalses=0;
+            int count=0;
             for(int m = 0; m < 4; ++m){
-                if(arr[m] == false){
-                    countFalses+=1;
+                if(arr[m] == (!isbastard)){
+                    count+=1;
                 }
             }
-            if(countFalses>=4){
+            if(count >= 4){
                 mapaHard[forma]+=1;
+                //4 trues ->facil
+                //3 trues ->+-
+                //2 trues -> intermedio
+                //1 trues ->dificil
             }
         }
     }
     //aca..................mapa
+    /*
     std::map<TetrixShape,int>::iterator iter;
     int max = 0;
     TetrixShape elegida = TetrixShape::ZShape;
@@ -639,8 +677,74 @@ TetrixShape TetrixBoard::bastard(){
             elegida = iter->first;
         }
     }
-    return elegida;
+
+    */
+    /*
+
+    std::map<TetrixShape,int>::iterator iter;
+    //mayor dificultad //pero
+    for(iter = mapaHard.begin(); iter != mapaHard.end(); iter++){
+        if(iter->second < max){
+            mapaHard.erase(iter->first);
+        }
+    }
+auto it = m.begin();
+std::advance(it, rand() % m.size());
+K random_key = it->first;
+    */
+/*
+    srand(time(NULL));
+//QRandomGenerator::global()->bounded(mapaHard.size()) + 1)
+    std::map<TetrixShape,int>::iterator it = mapaHard.begin();
+    std::advance(it,rand()%mapaHard.size());
+    TetrixShape ramdon_key = TetrixShape(it->first);
+*/
+    int max = 0;
+    getMaxOnMap(mapaHard,max);
+    deleteShapesOnMap(mapaHard,max);//este!!
+    TetrixShape ramdon_key = getRamdomHardPiece(mapaHard);
+    if(ramdon_key == curPiece.shape()){
+        if(mapaHard.size() > 1){
+            mapaHard.erase(ramdon_key);
+            ramdon_key = getRamdomHardPiece(mapaHard);
+        }
+    }
+
+    return ramdon_key;
 }
+void TetrixBoard::getMaxOnMap(std::map<TetrixShape,int>& mapaHard,int&max){
+    std::map<TetrixShape,int>::iterator iter;
+    TetrixShape elegida = TetrixShape::ZShape;
+    for (iter = mapaHard.begin(); iter != mapaHard.end(); iter++){
+        std::cout <<"LLave: "<<iter->first<<" Vlaue: "<<iter->second<<"\n";
+        if(max < iter->second){
+            max = iter->second;
+            elegida = iter->first;
+        }
+    }
+//    return elegida;
+}
+void TetrixBoard::deleteShapesOnMap(std::map<TetrixShape,int>& mapaHard,int&max){
+    std::map<TetrixShape,int>::iterator iter;
+    //mayor dificultad //pero
+    for(iter = mapaHard.begin(); iter != mapaHard.end(); iter++){
+        if(iter->second < max){
+            mapaHard.erase(iter->first);//1
+        }
+    }
+}
+TetrixShape TetrixBoard::getRamdomHardPiece(std::map<TetrixShape,int>& mapaHard){
+    srand(time(NULL));
+//QRandomGenerator::global()->bounded(mapaHard.size()) + 1)
+    std::map<TetrixShape,int>::iterator it = mapaHard.begin();
+    std::advance(it,rand()%mapaHard.size());
+    TetrixShape ramdon_key = TetrixShape(it->first);
+    return ramdon_key;
+}
+// DIFICIL
+
+//funcion
+// FACIL
 
 
 

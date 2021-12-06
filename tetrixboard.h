@@ -72,9 +72,9 @@ private:
     enum { BoardWidth = 10, BoardHeight = 22 };
     QBasicTimer timer;//para controlar la velocidad con la que cae la pieza
     QPointer<QLabel> nextPieceLabel;//DELnextpiece label
-    bool isStarted;
+    bool comienzo;
     bool isPaused;
-    bool isWaitingAfterLine;
+    bool waitSgteLine;
     TetrixPiece curPiece;//current Piece
     TetrixPiece nextPiece;//next Piece del enum
     int curX;
@@ -93,11 +93,23 @@ private:
         //X: celda
         //Y:alrtura donde esta esa celda
     }
+    int method=1;
     TetrixShape bastard();
     void getOfficeHeight();
+    TetrixShape getRamdomHardPiece(std::map<TetrixShape,int>& mapaHard);
+    void getMaxOnMap(std::map<TetrixShape,int>& mapaHard,int&max);
+    void deleteShapesOnMap(std::map<TetrixShape,int>& mapaHard,int&max);
+    bool isbastard = false;
+
     //es usado para el start(), para reanudar cuando esta pausado
     int timeoutTime() {
-        return 1000 / (1 + level);//masnivel, mas rapido
+        if(method == 1 && isbastard){
+            return 300 / (1 + level);//masnivel, mas rapido
+        }else if(method==2 && !isbastard){
+            return 800 / (1 + level);
+        }else{
+            return 1200 / (1 + level);
+        }
     }
     int squareWidth() {
         return contentsRect().width() / BoardWidth;
@@ -127,7 +139,7 @@ public:
 public slots:
     void start();//son los que se ejcutaran dado una SIGNAL
     void pause();
-
+    void updateMethod(QString methodS);
 signals://son las señales que puede enviar esta clase
     void scoreChanged(int score);//si cambia el score
     void levelChanged(int level);//si sube de nivel

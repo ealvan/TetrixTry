@@ -82,7 +82,7 @@ void TetrixPiece::setShape(TetrixShape shape)
         for (int j = 0; j < 2; ++j)
             coords[i][j] = coordsTable[shape][i][j];
     }
-    this->pieceShape = shape;
+    this->piezaForma = shape;
 //! [1] //! [2]
 }
 //! [2]
@@ -127,13 +127,13 @@ int TetrixPiece::maxY() const
 //! [6]
 
 //! [7]
-TetrixPiece TetrixPiece::rotatedLeft() const
+TetrixPiece TetrixPiece::rotaL() const
 {
-    if (pieceShape == SquareShape)
+    if (piezaForma == SquareShape)
         return *this;
 
     TetrixPiece result;
-    result.pieceShape = pieceShape;
+    result.piezaForma = piezaForma;
     for (int i = 0; i < 4; ++i) {
         result.setX(i, y(i));
         result.setY(i, -x(i));
@@ -143,14 +143,14 @@ TetrixPiece TetrixPiece::rotatedLeft() const
 }
 
 //! [9]
-TetrixPiece TetrixPiece::rotatedRight() const
+TetrixPiece TetrixPiece::rotaR() const
 {
-    if (pieceShape == SquareShape)
+    if (piezaForma == SquareShape)
         return *this;
 
     TetrixPiece result;
     //result.pieceShape = pieceShape;
-    result.setShape(pieceShape);//coords, todo miembro coords
+    result.setShape(piezaForma);//coords, todo miembro coords
     for (int i = 0; i < 4; ++i) {
         result.setX(i, -y(i));
         result.setY(i, x(i));
