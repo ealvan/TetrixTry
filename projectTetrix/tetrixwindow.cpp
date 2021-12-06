@@ -61,7 +61,7 @@
 #include <QVBoxLayout>
 #include <QLCDNumber>
 #include <QPushButton>
-
+#include <QString>
 //! [0]
 //las siguientes dos lineas son para inicializar, el TetrixBoard para el "playing area"
 //tambien el widget parent para inicializarlo
@@ -152,15 +152,25 @@ TetrixWindow::TetrixWindow(QWidget *parent)
             board, // tetrixWindow -> board,  Receiver
             &TetrixBoard::pause); //SLOT TetrixBoard -> pause
 
+    connect(this,
+            &TetrixWindow::selectRadioButtonChanged,
+            board,
+            &TetrixBoard::updateMethod
+    );
 /*
+ * connect(radio3,
+            &QRadioButton::clicked,
+            this,
+            &TetrixWindow::updateMethodBoard
+    );
     connect(dificultBox,
             &QGroupBox::clicked(false),
             board,
             setDificultLevel()
             );
-
-
 */
+
+
 #if __cplusplus >= 201402L
     connect(board, //sender
             &TetrixBoard::scoreChanged, //tetrix board
@@ -174,11 +184,7 @@ TetrixWindow::TetrixWindow(QWidget *parent)
     connect(board, &TetrixBoard::linesRemovedChanged,
             linesLcd, qOverload<int>(&QLCDNumber::display));
 
-    connect(this,
-            SIGNAL(selectRadioButtonChanged(QString)),
-            board,
-            SLOT(updateMethod(QString))
-    );
+
     //emit selectRadioButtonChanged("bastard");
 
 #else
@@ -197,14 +203,14 @@ TetrixWindow::TetrixWindow(QWidget *parent)
     //layout->addWidget(createLabel(tr("NEXT")), 0, 0);
     layout->addWidget(createBox(),1, 0);
     //layout->addWidget(nextPieceLabel, 1, 0);
-    layout->addWidget(createLabel(tr("LEVEL")), 2, 0);
+    layout->addWidget(createLabel(tr("Nivel")), 2, 0);
     layout->addWidget(levelLcd, 3, 0);
     layout->addWidget(startButton, 4, 0);
     //board->setFocus();
     layout->addWidget(board, 0, 1, 6, 1);
     layout->addWidget(createLabel(tr("SCORE")), 0, 2);
     layout->addWidget(scoreLcd, 1, 2);
-    layout->addWidget(createLabel(tr("LINES REMOVED")), 2, 2);
+    layout->addWidget(createLabel(tr("LINEAS REMOVIDAS")), 2, 2);
     layout->addWidget(linesLcd, 3, 2);
     layout->addWidget(quitButton, 4, 2);
     layout->addWidget(pauseButton, 5, 2);
@@ -221,6 +227,11 @@ QLabel* TetrixWindow::createLabel(const QString &text)
 {
     QLabel *label = new QLabel(text);
     label->setAlignment(Qt::AlignHCenter | Qt::AlignBottom);
+    label->setStyleSheet(
+                "color: #FFE6BC;"
+                "font-size: 34px;"
+                "font-family: 'Courier New';"
+                );
     return label;
 }
 
@@ -231,11 +242,31 @@ QGroupBox* TetrixWindow::createBox(){
     }
     dificultBox = new QGroupBox(tr("Nivel de dificultad"));
     QVBoxLayout *vbox = new QVBoxLayout;
-    QRadioButton *radio1 = new QRadioButton(tr("Bastard"));
-    QRadioButton *radio2 = new QRadioButton(tr("Normal"));
-    QRadioButton *radio3 = new QRadioButton(tr("Nice"));
+    radio1 = new QRadioButton(tr("Bastard"));
+    radio2 = new QRadioButton(tr("Normal"));
+    radio3 = new QRadioButton(tr("Nice"));
+//    dificultBox->children();
+
+    connect(radio1,
+            &QRadioButton::clicked,
+            this,
+            &TetrixWindow::updateMethodBoard
+    );
+
+    connect(radio2,
+            &QRadioButton::clicked,
+            this,
+            &TetrixWindow::updateMethodBoard
+    );
+    connect(radio3,
+            &QRadioButton::clicked,
+            this,
+            &TetrixWindow::updateMethodBoard
+    );
+
+    radio1->setChecked(true);
+
     radio1->setStyleSheet(
-    //DD4A48
                 "color: #DD4A48;"
                 "font-family: 'Courier New';"
                 "font-size: 24px;"
@@ -265,6 +296,19 @@ QGroupBox* TetrixWindow::createBox(){
     dificultBox->setFocusPolicy(Qt::ClickFocus);
 
     return dificultBox;
+}
+void TetrixWindow::updateMethodBoard(){
+    if(radio1->isChecked()){
+        emit selectRadioButtonChanged("1");
+    }else
+    if(radio2->isChecked()){
+        emit selectRadioButtonChanged("2");
+    }else
+    if(radio3->isChecked()){
+        emit selectRadioButtonChanged("3");
+    }else{
+        emit selectRadioButtonChanged("1");
+    }
 }
 
 

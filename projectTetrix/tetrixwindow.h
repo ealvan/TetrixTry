@@ -74,7 +74,8 @@ public:
 signals:
     //1,2,3
     void selectRadioButtonChanged(QString);
-
+public slots:
+    void updateMethodBoard();
 
 private:
     QLabel *createLabel(const QString &text);
@@ -90,7 +91,9 @@ private:
 //    QVBoxLayout *dificulBox;//contiene radio buttons
     QGroupBox *dificultBox = nullptr;
 //    Material.theme: Material.Dark
-
+    QRadioButton *radio1;
+    QRadioButton *radio2;
+    QRadioButton *radio3;
 };
 //! [0]
 

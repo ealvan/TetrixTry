@@ -69,7 +69,7 @@
 // y hay un QRect que cubre toda la zona,
 // antes de pintar esa zona
 TetrixBoard::TetrixBoard(QWidget *parent)
-    : QFrame(parent), isStarted(false), isPaused(false)
+    : QFrame(parent), comienzo(false), isPaused(false)
 {
     //cambia el style del playing area
     setFrameStyle(QFrame::Box | QFrame::Sunken);
@@ -109,8 +109,8 @@ QSize TetrixBoard::minimumSizeHint() const
                  BoardHeight * 5 + frameWidth() * 2);
 }
 
-void TetrixBoard::updateMethod(const QString& method){
-
+void TetrixBoard::updateMethod(QString methodS){
+    method = methodS.toInt();
 
 }
 
@@ -124,7 +124,7 @@ void TetrixBoard::newPiece(){
     //test.setShape(LineShape);
     //antes de esto, en el constructor se inicializa nextPiece, con setRandomPiece()
     //printState();
-    int method=1;
+    //int method=1;
     TetrixPiece dump;
     TetrixShape hard;
     TetrixPiece pieza;
@@ -163,7 +163,7 @@ void TetrixBoard::newPiece(){
     if (!tryMove(curPiece, curX, curY)) {
         curPiece.setShape(NoShape);
         timer.stop();
-        isStarted = false;
+        comienzo = false;
     }
 //! [30] //! [31]
 }
@@ -346,18 +346,19 @@ bool TetrixBoard::rowIsNoShape(int row){
 }
 //! [4]
 void TetrixBoard::start() {
+    //capturar el valor del metodo
 
     if (isPaused)
         return;
 
-    isStarted = true;
-    isWaitingAfterLine = false;
+    comienzo = true;
+    waitSgteLine = false;
     numLinesRemoved = 0;
     numPiecesDropped = 0;
     score = 0;
     level = 1;
     clearBoard();
-
+    //emit signal()
     emit linesRemovedChanged(numLinesRemoved);
     emit scoreChanged(score);
     emit levelChanged(level);
@@ -371,7 +372,7 @@ void TetrixBoard::start() {
 void TetrixBoard::pause()
 {
     //printState();
-    if (!isStarted)
+    if (!comienzo)
         return;
     isPaused = !isPaused;
     if (isPaused) {
@@ -437,7 +438,7 @@ drawText(const QRect &rectangle, int flags, const QString &text, QRect *bounding
 //! [13]
 void TetrixBoard::keyPressEvent(QKeyEvent *event)
 {
-    if (!isStarted || isPaused || curPiece.shape() == NoShape) {
+    if (!comienzo || isPaused || curPiece.shape() == NoShape) {
         QFrame::keyPressEvent(event);
         return;
     }
@@ -452,10 +453,10 @@ void TetrixBoard::keyPressEvent(QKeyEvent *event)
             tryMove(curPiece, curX + 1, curY);
             break;
         case Qt::Key_Down:
-            tryMove(curPiece.rotatedRight(), curX, curY);
+            tryMove(curPiece.rotaR(), curX, curY);
             break;
         case Qt::Key_Up:
-            tryMove(curPiece.rotatedLeft(), curX, curY);
+            tryMove(curPiece.rotaL(), curX, curY);
             break;
         case Qt::Key_Space:
             dropDown();
@@ -473,8 +474,8 @@ void TetrixBoard::keyPressEvent(QKeyEvent *event)
 void TetrixBoard::timerEvent(QTimerEvent *event)
 {
     if (event->timerId() == timer.timerId()) {
-        if (isWaitingAfterLine) {
-            isWaitingAfterLine = false;
+        if (waitSgteLine) {
+            waitSgteLine = false;
 
             newPiece();
             timer.start(timeoutTime(), this);
@@ -546,7 +547,7 @@ void TetrixBoard::pieceDropped(int dropHeight)
     emit scoreChanged(score);
     removeFullLines();
 
-    if (!isWaitingAfterLine)
+    if (!waitSgteLine)
     {
 
         //printState();
@@ -594,7 +595,7 @@ void TetrixBoard::removeFullLines()
         emit scoreChanged(score);
 
         timer.start(500, this);
-        isWaitingAfterLine = true;
+        waitSgteLine = true;
         curPiece.setShape(NoShape);
         update();
     }
@@ -641,7 +642,7 @@ TetrixShape TetrixBoard::bastard(){
             for(int k= 0; k<4; ++k ){
                 arr[k] = tryMove(ficha,x,y);
                 //----------
-                ficha = ficha.rotatedLeft();
+                ficha = ficha.rotaL();
             }
             //---ANALISIS
             //si es >= a 3 los falsos
