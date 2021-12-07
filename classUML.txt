@@ -1,0 +1,68 @@
+QFrame
+	QSize sizeHint()
+	QSize minimumSizeHint()
+QWidget
+
+Ventana
+	-score
+	-level
+	-linesRemoved
+	-startButton
+	-pauseButton
+	-quitButton
+	-nextPiezaLabel
+	-scoreLcd
+	-levelLcd
+	-linesLcd
+	-dificultBox
+	-radioBastard
+	-radioNormal
+	-radioEasy
+	+updateMethodBoardSlot()
+	+selectRadioButtonChanged(QString)
+	
+
+Tablero
+	-score
+	-coordeArray
+	-timeoutTime()
+	-numPiezasDropped
+	-bastard()
+	-getRandomPiece()
+	-clearTablero()
+	-shapeAt()
+	-oneLineDown()
+	-dropDown()
+	-removeFullLines()
+	-newPiece()
+	-showNextPiece()
+	-tryMove()
+	-drawSquare()
+	-printState()
+	-slotPause()
+	-slotStart()
+	-updateMethod()
+	-scoreChangedSignal()
+	-levelChangedSignal()
+	-linesRemovedChangedSignal()
+
+Pieza
+	-piezaForma
+	-coords
+	+getX()
+	+getY()
+	+maxX()
+	+maxY()
+	+minY()
+	+minX()
+	+setX()
+	+setY()
+	+shape()
+	+rotateLeft()
+	+rotateRight()
+	+setX()
+
+Tablero--*>QFrame
+Ventana--*>QWidget
+Tablero--<*>Ventana
+Pieza--<*>Tablero
