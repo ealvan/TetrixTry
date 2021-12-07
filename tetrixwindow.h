@@ -91,9 +91,10 @@ private:
 //    QVBoxLayout *dificulBox;//contiene radio buttons
     QGroupBox *dificultBox = nullptr;
 //    Material.theme: Material.Dark
-    QRadioButton *radio1;
-    QRadioButton *radio2;
-    QRadioButton *radio3;
+    QRadioButton *radioBastard;//radioButton que elige el metodo Bastard
+    QRadioButton *radioNormal;//radioButton que elige el metodo Normal
+    QRadioButton *radioEasy;//radioButton que elige el metodo Easy o Nice
+
 };
 //! [0]
 

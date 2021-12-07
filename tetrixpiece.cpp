@@ -66,6 +66,9 @@ void TetrixPiece::setRandomShape()
 //! [1]
 void TetrixPiece::setShape(TetrixShape shape)
 {
+    //dado una forma te da las corrdendas para imprimirlo en el tablero
+    //el constexpr es para que salve tiempo de ejecucion y va mas rapido
+    //static, significa que es una miembro que todos los objetos comparten
     static constexpr int coordsTable[8][4][2] = {
         { { 0, 0 },   { 0, 0 },   { 0, 0 },   { 0, 0 } }, //No Shape 0
         { { 0, -1 },  { 0, 0 },   { -1, 0 },  { -1, 1 } },//ZShape 1
@@ -77,6 +80,7 @@ void TetrixPiece::setShape(TetrixShape shape)
         { { 1, -1 },  { 0, -1 },  { 0, 0 },   { 0, 1 } }//MirroredL Shape
     };
 /*
+ * Transfiriendo los datos de las coodenadas dada una TetrixShape
 */
     for (int i = 0; i < 4 ; i++) {
         for (int j = 0; j < 2; ++j)
@@ -88,15 +92,16 @@ void TetrixPiece::setShape(TetrixShape shape)
 //! [2]
 
 //! [3]
+//te retorna el min de las abscisas(las X) del conjunto
+//de coordenadas
 int TetrixPiece::minX() const
 {
     int min = coords[0][0];
     for (int i = 1; i < 4; ++i)
         min = qMin(min, coords[i][0]);
     return min;
-
 }
-
+//te retorna el max de las X, dada las coordenadas
 int TetrixPiece::maxX() const
 //! [3] //! [4]
 {
@@ -106,7 +111,8 @@ int TetrixPiece::maxX() const
     return max;
 }
 //! [4]
-
+//te retorina la Y minima de las
+//coordenadas que es un array de 4x2
 //! [5]
 int TetrixPiece::minY() const
 {
@@ -115,7 +121,7 @@ int TetrixPiece::minY() const
         min = qMin(min, coords[i][1]);
     return min;
 }
-
+//el Y maximo de las coordenadas 4x2
 int TetrixPiece::maxY() const
 //! [5] //! [6]
 {
@@ -125,7 +131,9 @@ int TetrixPiece::maxY() const
     return max;
 }
 //! [6]
-
+//rota a la izquierda
+//rotaL, hace una rotacion, dada la ley
+//de espejos que nos enseñaron en secundaria
 //! [7]
 TetrixPiece TetrixPiece::rotaL() const
 {
@@ -141,7 +149,8 @@ TetrixPiece TetrixPiece::rotaL() const
 //! [7]
     return result;
 }
-
+//rota a la derecha
+//rotaR, es lo mismo solo que al reves
 //! [9]
 TetrixPiece TetrixPiece::rotaR() const
 {
@@ -155,6 +164,7 @@ TetrixPiece TetrixPiece::rotaR() const
         result.setX(i, -y(i));
         result.setY(i, x(i));
     }
+    //aqui hacemos un ejemplo de como rota la forma de Palito
         /*
              { 0, -1 }, 1, 0
              { 0, 0 },  0 , 0

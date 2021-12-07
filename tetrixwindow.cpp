@@ -80,6 +80,7 @@ TetrixWindow::TetrixWindow(QWidget *parent)
     scoreLcd = new QLCDNumber(5);//digits number
     scoreLcd->setSegmentStyle(QLCDNumber::Filled);
     scoreLcd->setStyleSheet(
+                //CSS que QT nos permite estilos a nuestros Widgets
                 "background-color:#064635;"
                 "color: #FFEBCC;"
                 "border-color: #5584AC;"
@@ -91,6 +92,7 @@ TetrixWindow::TetrixWindow(QWidget *parent)
     levelLcd = new QLCDNumber(2);//digits number
     levelLcd->setSegmentStyle(QLCDNumber::Flat);//style of numbers
     levelLcd->setStyleSheet(
+                //CSS que QT nos permite estilos a nuestros Widgets
                 "background-color:#064635;"
                 "color: #FFEBCC;"
                 "border-color: #5584AC;"
@@ -100,6 +102,7 @@ TetrixWindow::TetrixWindow(QWidget *parent)
 //  LINEAS borradas
     linesLcd = new QLCDNumber(5);//digits number
     linesLcd->setStyleSheet(
+                //CSS que QT nos permite estilos a nuestros Widgets
                 "background-color:#064635;"
                 "color: #FFEBCC;"
                 "border-color: #5584AC;"
@@ -195,12 +198,18 @@ TetrixWindow::TetrixWindow(QWidget *parent)
     connect(board, &TetrixBoard::linesRemovedChanged,
             linesLcd, QOverload<int>::of(&QLCDNumber::display));
 #endif
-//! [5]
-
-//! [6]
-
+    QLabel* nota = createLabel("Despues de Presionar \"Start\" Presione la Tecla TAB");
+    nota->setStyleSheet(
+    //CSS
+                "color: #FFE6BC;"
+                "font-size: 11px;"
+                "font-family: 'Courier New';"
+                "font-weight: bold;"
+                );
+    //agregando al Layaout nuestros Widgets,
+    //estos se hacen en forma de elemento
     QGridLayout *layout = new QGridLayout;
-    //layout->addWidget(createLabel(tr("NEXT")), 0, 0);
+    layout->addWidget(nota, 0, 0);
     layout->addWidget(createBox(),1, 0);
     //layout->addWidget(nextPieceLabel, 1, 0);
     layout->addWidget(createLabel(tr("Nivel")), 2, 0);
@@ -218,7 +227,7 @@ TetrixWindow::TetrixWindow(QWidget *parent)
     setLayout(layout);
 
     setWindowTitle(tr("Tetrix"));
-    resize(900, 600);
+    resize(1200, 700);
 }
 //! [6]
 
@@ -228,9 +237,11 @@ QLabel* TetrixWindow::createLabel(const QString &text)
     QLabel *label = new QLabel(text);
     label->setAlignment(Qt::AlignHCenter | Qt::AlignBottom);
     label->setStyleSheet(
+    //CSS
                 "color: #FFE6BC;"
                 "font-size: 34px;"
                 "font-family: 'Courier New';"
+                 "font-weight: bold;"
                 );
     return label;
 }
@@ -242,72 +253,88 @@ QGroupBox* TetrixWindow::createBox(){
     }
     dificultBox = new QGroupBox(tr("Nivel de dificultad"));
     QVBoxLayout *vbox = new QVBoxLayout;
-    radio1 = new QRadioButton(tr("Bastard"));
-    radio2 = new QRadioButton(tr("Normal"));
-    radio3 = new QRadioButton(tr("Nice"));
+    radioBastard = new QRadioButton(tr("Bastard"));
+    radioNormal = new QRadioButton(tr("Normal"));
+    radioEasy = new QRadioButton(tr("Nice"));
 //    dificultBox->children();
 
-    connect(radio1,
+    //Conectamos los radio, button a un slot de TetrixWindwos
+    //por ese slot manejara la señal que se comunicara con el usuario
+   //para elegir el metodo que quiere(Bstard,Nice,Normal)
+    connect(radioBastard,
             &QRadioButton::clicked,
             this,
             &TetrixWindow::updateMethodBoard
     );
 
-    connect(radio2,
+    connect(radioNormal,
             &QRadioButton::clicked,
             this,
             &TetrixWindow::updateMethodBoard
     );
-    connect(radio3,
+    connect(radioEasy,
             &QRadioButton::clicked,
             this,
             &TetrixWindow::updateMethodBoard
     );
 
-    radio1->setChecked(true);
+    radioBastard->setChecked(true);
 
-    radio1->setStyleSheet(
+    radioBastard->setStyleSheet(
                 "color: #DD4A48;"
                 "font-family: 'Courier New';"
                 "font-size: 24px;"
+                 "font-weight: bold;"
     );
-    radio2->setStyleSheet(
+    radioNormal->setStyleSheet(
                 //DD4A48
                             "color: #FFCA03;"
                             "font-family: 'Courier New';"
                             "font-size: 24px;"
+                 "font-weight: bold;"
            );
-    radio3->setStyleSheet(
+    radioEasy->setStyleSheet(
                 //DD4A48
-                            "color: #71DFE7;"
-                            "font-family: 'Courier New';"
-                            "font-size: 24px;"
+                   "color: #71DFE7;"
+                   "font-family: 'Courier New';"
+                   "font-size: 24px;"
+                   "font-weight: bold;"
            );
-    vbox->addWidget(radio1);
-    vbox->addWidget(radio2);
-    vbox->addWidget(radio3);
+    vbox->addWidget(radioBastard);
+    vbox->addWidget(radioNormal);
+    vbox->addWidget(radioEasy);
     //vbox->addStretch(1);
     dificultBox->setStyleSheet(
                 "color: #396EB0;"
                 "font-family: 'Courier New';"
                 "font-size: 24px;"
+                 "font-weight: bold;"
                 );
+
+    //agregamos la VetcalBoxayout a nuestro dificultBox
+    //por defecto lo muestra en forma vertical,
+    //y puede tern un ITemSpace, pero nos dimos que el espacio
+    //entr radioButton es muy grande....
     dificultBox->setLayout(vbox);
     dificultBox->setFocusPolicy(Qt::ClickFocus);
 
     return dificultBox;
 }
 void TetrixWindow::updateMethodBoard(){
-    if(radio1->isChecked()){
-        emit selectRadioButtonChanged("1");
+    //este es el slot que emite la señal
+    //de acuerdo a que radioButton ha sido elegido
+    if(radioBastard->isChecked()){
+        emit selectRadioButtonChanged("1");//Es bastard
     }else
-    if(radio2->isChecked()){
-        emit selectRadioButtonChanged("2");
+    if(radioNormal->isChecked()){
+        emit selectRadioButtonChanged("2");//es normal
     }else
-    if(radio3->isChecked()){
-        emit selectRadioButtonChanged("3");
+    if(radioEasy->isChecked()){
+        emit selectRadioButtonChanged("3");//es nice o easy
     }else{
-        emit selectRadioButtonChanged("1");
+        emit selectRadioButtonChanged("1");//es por defecto, sino elige nada
+        //aunque estamos seguros que no llegar aaqui
+        //aunque es mejor prevenir, es por esto el "else"
     }
 }
 

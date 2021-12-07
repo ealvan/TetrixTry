@@ -74,8 +74,9 @@ TetrixBoard::TetrixBoard(QWidget *parent)
     //cambia el style del playing area
     setFrameStyle(QFrame::Box | QFrame::Sunken);
     //set focus policy, nos permite que recnozca el tapping
-    //o el clicking pero sino tienes el StringFocus o el TabFocus
-    //no re permite usar la ficha
+    //ahay politicas de Focus, en la documentacion
+    //es necesario usar el TabFocus, porque asi hacemos que
+    //se enfoque en este widget con el TAB
     //setFocusPolicy(Qt::TabFocus);
     setFocusPolicy(Qt::TabFocus);
     //es un metodo que limpia el board
@@ -94,14 +95,18 @@ void TetrixBoard::setNextPieceLabel(QLabel *label)
 //! [1]
 
 //! [2]
+//Estos metodos son metodos que nos retornan
+//el Size del widget, que quieres cuando se muestre toda la aplicacion
 QSize TetrixBoard::sizeHint() const
 {
 
     return QSize(BoardWidth * 15 + frameWidth() * 2,
                  BoardHeight * 15 + frameWidth() * 2);
-
 }
-
+//este tambn es un override method
+//porque nos da el minimunsize Recomendado
+//si no e posible asignar este szeHint,
+//el minimun sizeHint hace su trabajo
 QSize TetrixBoard::minimumSizeHint() const
 //! [2] //! [3]
 {
@@ -109,9 +114,24 @@ QSize TetrixBoard::minimumSizeHint() const
                  BoardHeight * 5 + frameWidth() * 2);
 }
 
+//este metodo recibe desde el slot de TetrixWindow
+//un Qstring que nos da el metodo elegiio el usuario
 void TetrixBoard::updateMethod(QString methodS){
-    method = methodS.toInt();
+    //si el usuario presiona
+    /*
+    1: Bastard  -> el mas dificil
+    2: Normal -> eeste usa una random TetrixPiece
+    3: Nice -> este usa el metodo BastardTetrix PERO al contrario
+    //es decir recolecta las piezas que mas encajes tengan
 
+    //el nice tetris muchas veces elige
+    //los palos o los cuadrados, cuando elige las ZShape o LShape
+    //la mayoria de los casos es por que tiene bastantes huecos
+    //su implementacion
+
+    //pero es la contrario con Bastard Tetrix, usa la pero pieza
+    */
+    method = methodS.toInt();
 }
 
 
@@ -119,16 +139,15 @@ void TetrixBoard::updateMethod(QString methodS){
 //! [3]
 void TetrixBoard::newPiece(){
 
-    //qDebug() << "AAAAAAAAA"<<"  \n";
-    //TetrixPiece test;
-    //test.setShape(LineShape);
-    //antes de esto, en el constructor se inicializa nextPiece, con setRandomPiece()
-    //printState();
-    //int method=1;
+    //este metodo  crea una nueva pieza, y es muy usado
+    //Ademas este metodo tambien tiene una parte de codigo
+    //para elgegir el metodo o nivel de dificultad
     TetrixPiece dump;
+    //es la forma de la pieza que
+    //botara nuestro algoritmo
     TetrixShape hard;
-    TetrixPiece pieza;
-    switch (method) {
+    TetrixPiece pieza;//es la pieza qe se pondra
+    switch (method) {//method es un miebro de clase
     case 1:{
         timer.stop();
         isbastard = true;//nivel dificil
@@ -138,7 +157,9 @@ void TetrixBoard::newPiece(){
     }
     break;
     case 2:{
-        dump.setRandomShape();
+        dump.setRandomShape();//el dump se usa para acceder
+        //al metodo setRandomShape, y poder elegir
+        //al azar la pieza
         hard = dump.shape();
     }
     break;
@@ -150,13 +171,15 @@ void TetrixBoard::newPiece(){
     }
     break;
     }
+    //la Forma de la Pieza Hard se le da una TetrizPiece
     pieza.setShape(hard);
 
-    //curPiece = nextPiece;//copia los valores del nextPiece al curPiece
-    curPiece = pieza;
+    curPiece = pieza;//copia los valores del nextPiece al curPiece
 
-    //nextPiece.setRandomShape();//ademas el nextPiece rellena su atributo coords[4][2]
-    //showNextPiece();
+
+    //este es la conversion de coordenadas para ver que posicion estamos
+    //por defecto empieza de la corrdenada mas a la
+    //izquierda superio derecha
     curX = BoardWidth / 2 + 1;
     curY = BoardHeight - 1 + curPiece.minY();
 
@@ -178,7 +201,7 @@ void TetrixBoard::showNextPiece()
     //lo que estamos pintando en realidad es la pieza de tetris
     //no el mapa
     QPixmap pixmap(dx * squareWidth(), dy * squareHeight());
-    //QPaintDevice <- QPixmap
+    //QPaintDevice('Padre) <- QPixmap(Hijo)
     QPainter painter(&pixmap);//capta un QPaintDevice
     QBrush mybrush;
     mybrush.setStyle(Qt::SolidPattern);
@@ -201,12 +224,32 @@ void TetrixBoard::showNextPiece()
 
 //! [36]
 void TetrixBoard::drawSquare(QPainter &painter, int x, int y, TetrixShape shape){
+    /*
+    ¿Como ahcemos para que nuestras piezas cambien
+        de color constantemente?
+
+    al investigar en la documentacion,
+    vimos que el metodo:
+            void TetrixBoard::paintEvent(QPaintEvent *event)
+    se ejcuta automaticamente una vez se comienza el juego
+    para controlar este comportamiento
+    se uso el TimerEvent
+    QUe permite controlar este comportamiento
+
+    Es por eso que al darnos cuenta de esto podemos hacer que cambie
+    los colores de forma aleatoria
+    ya que este metodo esta anidado en el metodo  "::paintEvent"
+    */
     static constexpr QRgb colorTable[8] = {
         0x000000, 0xCC6666, 0x66CC66, 0x6666CC,
         0xCCCC66, 0xCC66CC, 0x66CCCC, 0xDAAA00
     };
+    //hacemos un random del tablero de colores y logramos este comportamiento
+    //ya que el tablero se renderiza cada vez que se mueva la pieza
+    //con el metodo DropLineDown
     int random = QRandomGenerator::global()->bounded(7) + 1;
 
+    //luego elgimos el color y se acabo
     QColor color = colorTable[random];
     painter.fillRect(x + 1,
                      y + 1,
@@ -214,7 +257,7 @@ void TetrixBoard::drawSquare(QPainter &painter, int x, int y, TetrixShape shape)
                      squareHeight() -2,
                      color);
 
-    painter.setPen(color.black());
+   // painter.setPen(color.black());
     /**/
     painter.drawLine(x, y + squareHeight() - 1, x, y);
 
@@ -255,54 +298,25 @@ void TetrixBoard::getOfficeHeight(){
 }
 
 //! [36]
-void TetrixBoard::printState(){
-    ////timer.stop(); timer.start(timeoutTime(), this);
-    timer.stop();
-    std::vector<int> cuadrados(10,int{});
-    cuadrados.reserve(10);
+//aqui habia un metodo de debugging pero
+//lo borramos por que este es la version final, esta en
+//el github si desea verlo
 
-
-    for (int i = 0; i < BoardHeight; ++i) {
-        for (int j = 0; j < BoardWidth; ++j) {
-            TetrixShape shape = shapeAt(j, BoardHeight - i - 1);
-            if(shape == NoShape){
-                std::cout << int(shape);
-                cuadrados[j] += 0;
-            }else{
-               std::cout << int(shape);
-                cuadrados[j] += 1;
-            }
-        }
-       std::cout <<"\n";
-    }
-    std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
-    int trueH = getTrueHeight(cuadrados);
-
-    std::cout <<"Altura Verdadera: "<<trueH<< "\n";
-    //aqui no tenemos nada
-    getCoordinate(trueH);
-
-    int i=0;
-    for(int& item: coorde){
-        std::cout <<i<< ": "<<item<<"\n";
-        ++i;
-    }
-
-
-
-
-    timer.start(timeoutTime(), this);
-    //pause();
-}
-
+//Este metodo Escanea el borde
+// y retorna las coordenadas del borde en una
+//lista simple de int coorde(miembro de la clase TetrixBoard)
 void TetrixBoard::getCoordinate(int top_level){
     if(top_level == 1){
-        //init a cero
         return;
     }
 
     int cor = 0;
-
+    /*
+        Con la altura verdadera
+        escanea hacia abajo
+        hasta encontrar una coordenada
+        hasta que la siguiente este ocupada
+    */
     for(int i = 0 ; i < BoardWidth; ++i){
         for(int j=top_level; j >= 0 ; --j){
             TetrixShape shape = shapeAt(i,j-1);
@@ -315,30 +329,51 @@ void TetrixBoard::getCoordinate(int top_level){
             }
         }
     }
+    //como es un miembro de clase podemos acceder a el en la clase
+    //y ya no retornar nada
 }
+/*
+    Este metodo obtiene la altura verdadera
+    en la exposiscion vimos como
+    hay una altura Falsa, por que esa altura solo
+    retorna una altura basada en cuantos bloques hay por columna
+*/
 int TetrixBoard::getTrueHeight(std::vector<int>& rows){
+    //este metodo recibe un vector
+    //con el numero de bloques en cada columna,
+    //y de acuerdo a esp retorna la altura verdadera
+    //en la sgte linea usamos la altura falsa
     auto max = std::max_element(rows.begin(),rows.end());
     int alturaMax = *max;
-    //std::cout << "Max: 0"<<alturaMax<<"\n";
-    bool isTrueH = rowIsNoShape(alturaMax+1);//la sigte fila de la altura maxima debe estar llena de ceros
-
-    if(isTrueH){
+    //la sigte fila de la altura maxima debe estar llena de ceros
+    //Y es basicamente lo que hace este algoritmo
+    bool isTrueH = rowIsNoShape(alturaMax+1);
+    if(isTrueH){//si la sgte linea esta llena de NoShape
+        //significa que la altura verdara esta
+        //a una fila mas de distancia
         return alturaMax+1;
     }else{
+        //pero sino es asi
+        //iteramos hasta hallarla
         int upper = 1;
+        //mientras la fila no este llena de NoShape significa
+        //que aun no se alcanzo la altura verdadera
         while(!rowIsNoShape(alturaMax+upper)){
             upper++;
         }
+        //cuando la alcancemos la retornamos
         return alturaMax+upper;
     }
 }
+//este metodo solo verifica que todas
+//celdas de una columna esten llena de NoShape
 bool TetrixBoard::rowIsNoShape(int row){
     bool isNoShape = true;
     for(int j=0; j < BoardWidth; ++j){
         TetrixShape shape = shapeAt(j,row-1);
         if(shape != NoShape){
            isNoShape = false;
-           break;
+           break;//cortamos para que ya no pierda tiempo
         }
 //        std::cout << int(shape);
     }
@@ -347,7 +382,9 @@ bool TetrixBoard::rowIsNoShape(int row){
 //! [4]
 void TetrixBoard::start() {
     //capturar el valor del metodo
-
+    //este metodo es un SLOT
+    //el cual se maneja en la clase TetrixWindow
+    //para que se ejecute el usario debe rpesionar el boton "Start"
     if (isPaused)
         return;
 
@@ -359,11 +396,14 @@ void TetrixBoard::start() {
     level = 1;
     clearBoard();
     //emit signal()
+    //emitimos las señales que usaran los elots
+    //de los numeros LCD
+    //que usaran su eslot DISPLAY(int number)
     emit linesRemovedChanged(numLinesRemoved);
     emit scoreChanged(score);
     emit levelChanged(level);
 
-    newPiece();
+    newPiece();//es la funcion donde se elige que metodo quiere
     timer.start(timeoutTime(), this);
 }
 //! [4]
@@ -371,7 +411,9 @@ void TetrixBoard::start() {
 //! [5]
 void TetrixBoard::pause()
 {
-    //printState();
+    //el pause hace el que el timerEvent haga
+    //que se pare al painEvent()
+    //printState(); //metodo de debugging
     if (!comienzo)
         return;
     isPaused = !isPaused;
@@ -380,33 +422,33 @@ void TetrixBoard::pause()
     } else {
         timer.start(timeoutTime(), this);
     }
-    //update();//cuando no lo pongo, se pausa tood, pero no muestra el mensaje Paused
-    //update();
+    //update();//
+    //update();Es para pausar el estado del widget
 //! [5] //! [6]
 }
 //! [6]
 
 //! [7]
 //!
+//este metodo se ejecuta a cada instante
+//debido al bucle que permite a
+//la ventana seguir funcionando
 void TetrixBoard::paintEvent(QPaintEvent *event) {
     //printState();// mala idea
     QFrame::paintEvent(event);//no entiendo
-
     QPainter painter(this);//
     QRect rect = contentsRect();
 //! [7]
-
     if (isPaused) {
-/*
-drawText(const QRect &rectangle, int flags, const QString &text, QRect *boundingRect = nullptr)
-*/
+
         painter.drawText(rect, Qt::AlignCenter, tr("Pause"));
         return;
     }
 
 //! [8]
     int boardTop = rect.bottom() - BoardHeight*squareHeight();
-
+    //este metodo dibuja un cuadrado cada en las coodenadas
+    //especificadas
     for (int i = 0; i < BoardHeight; ++i) {
         for (int j = 0; j < BoardWidth; ++j) {
             TetrixShape shape = shapeAt(j, BoardHeight - i - 1);
@@ -419,6 +461,9 @@ drawText(const QRect &rectangle, int flags, const QString &text, QRect *bounding
 //! [9]
 
 //! [10]
+//  Si es != a NoShape entonces la dibujamos
+//esto es debido a que hay un random que elige que pieza saldra
+//por lo que para estar seguros este if esta aqui
     if (curPiece.shape() != NoShape) {
         for (int i = 0; i < 4; ++i) {
             int x = curX + curPiece.x(i);
@@ -429,22 +474,22 @@ drawText(const QRect &rectangle, int flags, const QString &text, QRect *bounding
                        curPiece.shape()
             );
         }
-//! [10] //! [11]
-    }
-//! [11] //! [12]
-}
-//! [12]
 
-//! [13]
+    }
+
+}
+
+//Este metodo maneja las teclas a presionar para el tablero
+//este metodo cuando tu le das a una flecha
+//intenta contruir esa pieza en esas coordenadas
+//pero sino puede retorna un False el TryMove()
 void TetrixBoard::keyPressEvent(QKeyEvent *event)
 {
     if (!comienzo || isPaused || curPiece.shape() == NoShape) {
         QFrame::keyPressEvent(event);
         return;
     }
-//! [13]
 
-//! [14]
     switch (event->key()) {
         case Qt::Key_Left:
             tryMove(curPiece, curX - 1, curY);
@@ -467,12 +512,13 @@ void TetrixBoard::keyPressEvent(QKeyEvent *event)
         default:
             QFrame::keyPressEvent(event);
     }
-//! [14]
-}
 
-//! [15]
+}
+//este es el que conytrola la ejecucion del juego
+
 void TetrixBoard::timerEvent(QTimerEvent *event)
 {
+    //debe ser el mismo ID
     if (event->timerId() == timer.timerId()) {
         if (waitSgteLine) {
             waitSgteLine = false;
@@ -503,6 +549,9 @@ void TetrixBoard::clearBoard()
 //! [18]
 
 //! [19]
+// usa el metodo de trymove()
+// para ver que todas encaje y cuando no encaje
+// ya no se mueve la caja
 void TetrixBoard::dropDown() // Space key
 {
     int dropHeight = 0;
@@ -514,19 +563,15 @@ void TetrixBoard::dropDown() // Space key
         ++dropHeight;
     }
     pieceDropped(dropHeight);
-//! [19] //! [20]
-}
-//! [20]
 
-//! [21]
+}
+
 void TetrixBoard::oneLineDown()// key D
 {
     if (!tryMove(curPiece, curX, curY - 1))
        pieceDropped(0);
 }
-//! [21]
 
-//! [22]
 void TetrixBoard::pieceDropped(int dropHeight)
 {
     for (int i = 0; i < 4; ++i) {
@@ -558,6 +603,8 @@ void TetrixBoard::pieceDropped(int dropHeight)
 //! [23]
 
 //! [24]
+//Este metodo remueve las lineas o filas
+//que este llenas y != de NoShape's
 void TetrixBoard::removeFullLines()
 {
     int numFullLines = 0;
@@ -566,15 +613,19 @@ void TetrixBoard::removeFullLines()
         bool lineIsFull = true;
 
         for (int j = 0; j < BoardWidth; ++j) {
+            //si alguno es NoShape,
             if (shapeAt(j, i) == NoShape) {
+                // ya no es linea completa
                 lineIsFull = false;
                 break;
             }
         }
-
+        //si la linea estaba llena
         if (lineIsFull) {
-//! [24] //! [25]
+            //incrementamos el numero de lineas removidas
             ++numFullLines;
+            //luego hacemos un traspaso de todo el tablero
+            //una linea abajo
             for (int k = i; k < BoardHeight - 1; ++k) {
                 for (int j = 0; j < BoardWidth; ++j)
                     shapeAt(j, k) = shapeAt(j, k + 1);
@@ -583,14 +634,14 @@ void TetrixBoard::removeFullLines()
             for (int j = 0; j < BoardWidth; ++j)
                 shapeAt(j, BoardHeight - 1) = NoShape;
         }
-//! [26] //! [27]
     }
-//! [27]
-
-//! [28]
+    //esta linea es para ver lo del score
     if (numFullLines > 0) {
+
         numLinesRemoved += numFullLines;
         score += 10 * numFullLines;
+        //luego actualizamos nuestro score
+        //de acuerdo al numero delineas removidas
         emit linesRemovedChanged(numLinesRemoved);
         emit scoreChanged(score);
 
@@ -599,18 +650,23 @@ void TetrixBoard::removeFullLines()
         curPiece.setShape(NoShape);
         update();
     }
-//! [28] //! [29]
 }
-//! [29]
-
-//! [34]
-//!
-//!
+//Este metodo es nuestro algoritmo de Bastard
+//es un algoritmo que al principio fue dificil
+//de implementar, pero luego se hizo un poco mas facil cada dia
 TetrixShape TetrixBoard::bastard(){
 
-    //aqui se usa la array coorde[]
+    //aqui se usa la array coorde[](miembro de la clase)
+    //dado que el la altura verdadera es un miembro
+    //de esta clase
+    //no necesitamos retornar nada
+    getOfficeHeight();//tambien se encarga de actrualizar el array
+    //con todos los bordes
+    //ahora tenemos la altura verdadera
 
-    getOfficeHeight();
+    //necesitamos un mapa que diga cuantos No encajes
+    //hubo en cierta coordenada del borde
+    //este mapa nos servira para esto
     std::map<TetrixShape,int> mapaHard ={
         {ZShape,0},//1
         { SShape,0},//2
@@ -620,25 +676,28 @@ TetrixShape TetrixBoard::bastard(){
         {LShape,0},//6
         {MirroredLShape,0}//7
     };
-    //tenemos el array con corrdenadas//si qnecesitamos la altura
-    //std::set<TetrixShape> listaHard;
-
-   // listaHard.reserve(7);//7 piezas
-
     //1...7
+    //este bucle sirve para poder recorrer el array
+    //con todos los bordes que recogimos del tablero
     for(int i=0; i < 19;i+=2 ){
         int x = coorde[i];//0,2,4,
-        int y = BoardHeight - coorde[i+1];//??????????????????
+        int y = BoardHeight - coorde[i+1];//este es una conversion
+        //ya que el tablero funciona como un epejo invertido hacia arriba
 
+        //luego hacemos una TetrixShape que empieze con
+        //la 2da pieza dentro del enumTetrixShape
         TetrixShape forma = TetrixShape::ZShape;
 
         for(int j = int(forma); j < 8; ++j){//recorremos por shape
-            forma = TetrixShape(j);//teneoms todas,L,S
-            TetrixPiece ficha;
-            ficha.setShape(forma);//normal//orignal
+            forma = TetrixShape(j);//tenemos todas,L,S,T,Line,Square,etc ...
+            TetrixPiece ficha;//esta ficha es la que se usa para encajar
+            //en el borde
+            ficha.setShape(forma);//le cambiamos su forma
+            //lo que conlleva a tambn cambiarle sus coordenadas
 
+            //este array almacenara todas
+            //las posibilidades de rotacion en un punto en particular
             bool arr[4]={false};
-            //bool sePuede = tryMove(ficha,x,y);
             for(int k= 0; k<4; ++k ){
                 arr[k] = tryMove(ficha,x,y);
                 //----------
@@ -650,55 +709,28 @@ TetrixShape TetrixBoard::bastard(){
             //sino
             //false, true,true,true
             //
+            //contamos el numero de falsos
             int count=0;
             for(int m = 0; m < 4; ++m){
                 if(arr[m] == (!isbastard)){
                     count+=1;
                 }
             }
+            //luego vemos si es mayor o igual
+            //si no se puede encajar en cualquiera de sus forma
+            //entonces esa piezas seria la indicada
+            //PERO SOLO para ese punto en particular
+            //no para todo el borde
             if(count >= 4){
                 mapaHard[forma]+=1;
-                //4 trues ->facil
-                //3 trues ->+-
-                //2 trues -> intermedio
-                //1 trues ->dificil
+                //ejemplo de recoleccion a la
+                //4 trues ->facil ->significa 0 falses
+                //3 trues -> +-  ->sifnifica 1 false
+                //2 trues -> intermedio -> significa 2 falses
+                //1 trues ->dificil -> que 3 falses muy dificil
             }
         }
     }
-    //aca..................mapa
-    /*
-    std::map<TetrixShape,int>::iterator iter;
-    int max = 0;
-    TetrixShape elegida = TetrixShape::ZShape;
-    for (iter = mapaHard.begin(); iter != mapaHard.end(); iter++){
-        std::cout <<"LLave: "<<iter->first<<" Vlaue: "<<iter->second<<"\n";
-        if(max < iter->second){
-            max = iter->second;
-            elegida = iter->first;
-        }
-    }
-
-    */
-    /*
-
-    std::map<TetrixShape,int>::iterator iter;
-    //mayor dificultad //pero
-    for(iter = mapaHard.begin(); iter != mapaHard.end(); iter++){
-        if(iter->second < max){
-            mapaHard.erase(iter->first);
-        }
-    }
-auto it = m.begin();
-std::advance(it, rand() % m.size());
-K random_key = it->first;
-    */
-/*
-    srand(time(NULL));
-//QRandomGenerator::global()->bounded(mapaHard.size()) + 1)
-    std::map<TetrixShape,int>::iterator it = mapaHard.begin();
-    std::advance(it,rand()%mapaHard.size());
-    TetrixShape ramdon_key = TetrixShape(it->first);
-*/
     int max = 0;
     getMaxOnMap(mapaHard,max);
     deleteShapesOnMap(mapaHard,max);//este!!
@@ -712,18 +744,25 @@ K random_key = it->first;
 
     return ramdon_key;
 }
+// cambia la variable por referencia max
+// el valor a cambiar el el valor maximo de los vaores en los mapas
 void TetrixBoard::getMaxOnMap(std::map<TetrixShape,int>& mapaHard,int&max){
     std::map<TetrixShape,int>::iterator iter;
-    TetrixShape elegida = TetrixShape::ZShape;
+
     for (iter = mapaHard.begin(); iter != mapaHard.end(); iter++){
         std::cout <<"LLave: "<<iter->first<<" Vlaue: "<<iter->second<<"\n";
         if(max < iter->second){
             max = iter->second;
-            elegida = iter->first;
+
         }
     }
-//    return elegida;
 }
+//borramos las pares de valores que sean
+//menor al valor maximo de no encajadas en el borde
+//para solo hacer un random entre los que estan mas dificiles
+//a veces nos sale todas 8, asi que este metodo no borra nada
+//pero si hay una de 9 y las demas 8, entonce
+//solo deja un par en el mapa
 void TetrixBoard::deleteShapesOnMap(std::map<TetrixShape,int>& mapaHard,int&max){
     std::map<TetrixShape,int>::iterator iter;
     //mayor dificultad //pero
@@ -733,12 +772,22 @@ void TetrixBoard::deleteShapesOnMap(std::map<TetrixShape,int>& mapaHard,int&max)
         }
     }
 }
+//ahora que ya tenemos en el mapa ya filtrado
+//por el anterior metodo
+//solo no queda hace un random
+//buscando un poco
+//vimos que existe este el std::advance, que hace el random
+//por nosotros
 TetrixShape TetrixBoard::getRamdomHardPiece(std::map<TetrixShape,int>& mapaHard){
     srand(time(NULL));
 //QRandomGenerator::global()->bounded(mapaHard.size()) + 1)
     std::map<TetrixShape,int>::iterator it = mapaHard.begin();
+    //le damos in iterator y le da el puntero con un par
+    //random del mapaHard
     std::advance(it,rand()%mapaHard.size());
+
     TetrixShape ramdon_key = TetrixShape(it->first);
+    //luego retornamos
     return ramdon_key;
 }
 // DIFICIL
@@ -748,10 +797,14 @@ TetrixShape TetrixBoard::getRamdomHardPiece(std::map<TetrixShape,int>& mapaHard)
 
 
 
+//este metodo es el que no bota True
+//si es que se puede mover
+
 
 bool TetrixBoard::tryMove(const TetrixPiece &newPiece, int newX, int newY)
 {
-    //std::cout << "newX: "<<newX <<"\tnewY: "<<newY<<std::endl;
+    //std::cout << "newX: "<<newX <<"\tnewY: "<<newY<<std::endl;//para debugging
+
     for (int i = 0; i < 4; ++i) {
         int x = newX + newPiece.x(i);
         int y = newY - newPiece.y(i);
